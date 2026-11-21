@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.sentinel</groupId>
-	<artifactId>sentinal</artifactId>
+	<artifactId>sentinel</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name/>
 	<description/>

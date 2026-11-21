@@ -1,13 +1,13 @@
-package com.sentinel.sentinal;
+package com.sentinel.sentinel;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class SentinalApplication {
+public class SentinelApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(SentinalApplication.class, args);
+		SpringApplication.run(SentinelApplication.class, args);
 	}
 
 }

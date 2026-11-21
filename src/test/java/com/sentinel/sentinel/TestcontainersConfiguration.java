@@ -1,4 +1,4 @@
-package com.sentinel.sentinal;
+package com.sentinel.sentinel;
 
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;

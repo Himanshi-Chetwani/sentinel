@@ -1,4 +1,4 @@
-package com.sentinel.sentinal;
+package com.sentinel.sentinel;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Import;
 
 @Import(TestcontainersConfiguration.class)
 @SpringBootTest
-class SentinalApplicationTests {
+class SentinelApplicationTests {
 
 	@Test
 	void contextLoads() {
