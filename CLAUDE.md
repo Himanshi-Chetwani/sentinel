@@ -59,11 +59,62 @@ risks, what was left out, next steps).
 - [ ] 5. Multi-stage Dockerfile, non-root user
 - [ ] 6. App connects to Kafka + DB
 ### Phase 2 — Security foundation
-- [ ] 7. Mock IdP: RSA keypair (not in repo) + token generator (customer_id, roles, iss, aud, exp)
-- [ ] 8. Resource server validates signature, issuer, audience, expiry
-- [ ] 9. Role → endpoint mapping
-- [ ] 10. Single helper that reads customer ID from the token
-- [ ] 11. Test: bad/expired token → 401
+Covers: Authentication, Authorization, start of Customer isolation (assignment p.2).
+Decisions: mock IdP = Java token utility (pre-generated test tokens, no IdP service);
+RS256 asymmetric signing (app holds ONLY the public key, so it cannot mint tokens);
+sentinel is a stateless OAuth2 resource server; it never issues tokens.
+
+**7. Mock IdP — issue tokens**
+- [ ] 7a. Generate RSA 2048 key pair → `keys/private.pem`, `keys/public.pem`
+      (openssl). Verify `git status` does NOT show `keys/`.
+- [ ] 7b. Save key commands as `scripts/gen_keys.sh` (committed) so reviewers can make their own keys.
+- [ ] 7c. `TestTokenIssuer` in `src/test/java/.../support/` (test scope → never in prod JAR/image),
+      using Nimbus JOSE (already on classpath):
+      load private key (PKCS8) → `JWTClaimsSet` → `SignedJWT` with `JWSAlgorithm.RS256` → `RSASSASigner` → serialize.
+- [ ] 7d. Claims: `iss`=http://sentinel-idp, `aud`=sentinel-api, `sub`, `customer_id`,
+      `roles` (["ingest"] / ["analyst"]), `iat`, `exp` (short-lived, e.g. 1h), `jti` (UUID).
+- [ ] 7e. Args/flags for negative tests: customer, role, `--expired`, `--iss <x>`, `--aud <x>`,
+      optional second key pair for "wrong signing key". Print ONLY the token.
+- [ ] 7f. Check a token on jwt.io (test tokens only): alg RS256, claims present, signature verified. Commit.
+
+**8. Sentinel verifies tokens (resource server)**
+- [ ] 8a. `application.yml`: `sentinel.security.jwt.issuer`, `.audience`,
+      `.public-key-location` = `${JWT_PUBLIC_KEY_LOCATION:file:keys/public.pem}`.
+- [ ] 8b. `SecurityConfig` → `JwtDecoder` bean: load public key (`RsaKeyConverters.x509()`),
+      `NimbusJwtDecoder.withPublicKey(...)` with algorithm PINNED to RS256.
+- [ ] 8c. Validators (`DelegatingOAuth2TokenValidator`):
+      expiry + issuer (`JwtValidators.createDefaultWithIssuer`),
+      audience (`JwtClaimValidator` on `aud`),
+      **`exp` must exist** (default validator skips tokens without `exp`).
+- [ ] 8d. `SecurityFilterChain` bean: `anyRequest().authenticated()`, `oauth2ResourceServer().jwt()`,
+      `SessionCreationPolicy.STATELESS`, CSRF disabled (bearer header, no cookies — be ready to explain).
+      Decide `/actuator/health`: permitAll by exact path (document in NOTES.md) or keep protected.
+- [ ] 8e. `JwtAuthenticationConverter`: read authorities from `roles` claim, prefix `ROLE_`
+      (Spring defaults to `scope`/`SCOPE_` and would ignore `roles`).
+- [ ] 8f. Manual tests (curl -i / Postman): missing token → 401, valid → passes, expired → 401,
+      tampered → 401, wrong iss → 401, wrong aud → 401, wrong signing key → 401.
+- [ ] 8g. Docker: mount `./keys/public.pem:/keys/public.pem:ro` into `app` (public key ONLY),
+      set `JWT_PUBLIC_KEY_LOCATION=file:/keys/public.pem`, rebuild, repeat tests. Commit.
+
+**9. Authorization (roles)**
+- [ ] 9a. `ingest` → `POST /api/v1/events`; `analyst` → `GET/PATCH /api/v1/alerts/**`. Enforced server-side.
+- [ ] 9b. Valid token + wrong role → **403** (vs 401 for missing/invalid token).
+
+**10. Customer identity from token**
+- [ ] 10a. ONE helper (e.g. `CurrentCustomer`) reads `customer_id` from the verified JWT.
+- [ ] 10b. Rule: no controller ever accepts customerId from body/query/header — not even for testing.
+- [ ] 10c. Missing/blank `customer_id` claim → reject (401/403), never default.
+
+**11. Automated auth tests**
+- [ ] 11a. Test: bad (tampered / wrong key) token → 401.
+- [ ] 11b. Test: expired token → 401. (Reuse `TestTokenIssuer`.)
+- [ ] 11c. (Nice to have) wrong role → 403.
+
+**Phase 2 security guardrails**
+- Never log the `Authorization` header or token strings in sentinel.
+- `private.pem` never committed, never mounted into the app container.
+- Full isolation (filtering every query by customer, 404 for other customers' IDs, UUID ids)
+  is enforced in Phases 4, 6, 7 and proven by test in step 27.
 ### Phase 3 — Ingest
 - [ ] 12. Event models + validation
 - [ ] 13. Size limits (batch size, body size, string lengths)
