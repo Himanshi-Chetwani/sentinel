@@ -49,8 +49,11 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092   # internal listener, not localhost
+      JWT_PUBLIC_KEY_LOCATION: file:/keys/public.pem
     ports:
       - "127.0.0.1:8080:8080"
+    volumes:
+      - ./keys/public.pem:/keys/public.pem:ro
 
 volumes:
   pgdata:
