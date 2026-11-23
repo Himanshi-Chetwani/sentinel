@@ -50,7 +50,7 @@ README.md (run, test, example API calls); NOTES.md (~1 page: design, security
 risks, what was left out, next steps).
 
 ## Design reference
-`docs/DESIGN.md` is the source of truth for architecture, workflows (A token · B ingest ·
+`docs/DESIGN.pdf` is the source of truth for architecture, workflows (A token · B ingest ·
 C detect+alert · D review), API, event types, data model and test scenarios.
 Keep code and this plan consistent with it; update the design doc when a decision changes.
 
@@ -122,7 +122,7 @@ the public key); sentinel is a stateless resource server and never issues tokens
 - [ ] 20. Brute force: key (customer, user, sourceIp); ≥10 failures in 5 min, then a success
 - [ ] 21. Port scan: key (customer, sourceIp, destinationIp); ≥50 distinct ports in 2 min
 - [ ] 22. Decide + document: window state (memory vs DB), event time vs arrival time
-- [ ] 23. Rule unit tests — all scenarios in DESIGN.md §10 (incl. 9 vs 10, 49 vs 50, outside window,
+- [ ] 23. Rule unit tests — all scenarios in DESIGN.pdf §10 (incl. 9 vs 10, 49 vs 50, outside window,
       split across IPs/users, same ports repeated, normal traffic → no alert)
 
 ### Phase 6 — Alert (Workflow C, part 3)
@@ -148,7 +148,7 @@ the public key); sentinel is a stateless resource server and never issues tokens
 ### Phase 10 — Docs + submission
 - [ ] 34. README.md: run, test, example curl calls
 - [ ] 35. NOTES.md (~1 page): design choices, security risks + handling, left out, next steps
-- [ ] 36. Re-export `docs/DESIGN.md`; walkthrough prep: read every file, practise one small change
+- [ ] 36. Re-export `docs/DESIGN.pdf`; walkthrough prep: read every file, practise one small change
 
 **Guardrails (always)**
 - Never log the `Authorization` header or token strings.
