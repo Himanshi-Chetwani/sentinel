@@ -1,0 +1,45 @@
+{
+  "events": [
+    {
+      "type": "LOGIN",
+      "user": "bob",
+      "sourceIp": "192.0.2.11",
+      "success": true,
+      "timestamp": "2026-11-23T10:01:00Z"
+    },
+    {
+      "user": "carol",
+      "sourceIp": "192.0.2.12",
+      "success": false,
+      "timestamp": "2026-11-23T10:01:05Z"
+    },
+    {
+      "type": "PRINTER",
+      "sourceIp": "192.0.2.13",
+      "timestamp": "2026-11-23T10:01:10Z"
+    },
+    {
+      "type": "LOGIN",
+      "user": "dave",
+      "sourceIp": "999.1.1.1",
+      "success": false,
+      "timestamp": "2026-11-23T10:01:15Z"
+    },
+    {
+      "type": "FIREWALL",
+      "sourceIp": "192.0.2.14",
+      "destinationIp": "10.0.0.5",
+      "destinationPort": 70000,
+      "action": "DENY",
+      "timestamp": "2026-11-23T10:01:20Z"
+    },
+    {
+      "type": "FIREWALL",
+      "sourceIp": "192.0.2.15",
+      "destinationIp": "10.0.0.6",
+      "destinationPort": 443,
+      "action": "ALLOW",
+      "timestamp": "not-a-date"
+    }
+  ]
+}

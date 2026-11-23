@@ -1,0 +1,74 @@
+{
+  "events": [
+    {
+      "type": "LOGIN",
+      "user": "alice",
+      "sourceIp": "203.0.113.7",
+      "success": false,
+      "timestamp": "2026-11-23T10:00:00Z"
+    },
+    {
+      "type": "LOGIN",
+      "user": "alice",
+      "sourceIp": "203.0.113.7",
+      "success": false,
+      "timestamp": "2026-11-23T10:00:10Z"
+    },
+    {
+      "type": "LOGIN",
+      "user": "alice",
+      "sourceIp": "203.0.113.7",
+      "success": false,
+      "timestamp": "2026-11-23T10:00:20Z"
+    },
+    {
+      "type": "LOGIN",
+      "user": "alice",
+      "sourceIp": "203.0.113.7",
+      "success": false,
+      "timestamp": "2026-11-23T10:00:30Z"
+    },
+    {
+      "type": "LOGIN",
+      "user": "alice",
+      "sourceIp": "203.0.113.7",
+      "success": false,
+      "timestamp": "2026-11-23T10:00:40Z"
+    },
+    {
+      "type": "LOGIN",
+      "user": "alice",
+      "sourceIp": "203.0.113.7",
+      "success": false,
+      "timestamp": "2026-11-23T10:00:50Z"
+    },
+    {
+      "type": "LOGIN",
+      "user": "alice",
+      "sourceIp": "203.0.113.7",
+      "success": false,
+      "timestamp": "2026-11-23T10:01:00Z"
+    },
+    {
+      "type": "LOGIN",
+      "user": "alice",
+      "sourceIp": "203.0.113.7",
+      "success": false,
+      "timestamp": "2026-11-23T10:01:10Z"
+    },
+    {
+      "type": "LOGIN",
+      "user": "alice",
+      "sourceIp": "203.0.113.7",
+      "success": false,
+      "timestamp": "2026-11-23T10:01:20Z"
+    },
+    {
+      "type": "LOGIN",
+      "user": "alice",
+      "sourceIp": "203.0.113.7",
+      "success": true,
+      "timestamp": "2026-11-23T10:01:30Z"
+    }
+  ]
+}

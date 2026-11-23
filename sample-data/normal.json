@@ -1,0 +1,64 @@
+{
+  "events": [
+    {
+      "type": "LOGIN",
+      "user": "alice",
+      "sourceIp": "192.0.2.21",
+      "success": true,
+      "timestamp": "2026-11-23T09:00:00Z"
+    },
+    {
+      "type": "LOGIN",
+      "user": "carol",
+      "sourceIp": "192.0.2.22",
+      "success": true,
+      "timestamp": "2026-11-23T09:01:00Z"
+    },
+    {
+      "type": "LOGIN",
+      "user": "bob",
+      "sourceIp": "192.0.2.23",
+      "success": false,
+      "timestamp": "2026-11-23T09:02:00Z"
+    },
+    {
+      "type": "LOGIN",
+      "user": "bob",
+      "sourceIp": "192.0.2.23",
+      "success": true,
+      "timestamp": "2026-11-23T09:03:00Z"
+    },
+    {
+      "type": "FIREWALL",
+      "sourceIp": "192.0.2.21",
+      "destinationIp": "10.0.0.10",
+      "destinationPort": 80,
+      "action": "ALLOW",
+      "timestamp": "2026-11-23T09:04:00Z"
+    },
+    {
+      "type": "FIREWALL",
+      "sourceIp": "192.0.2.22",
+      "destinationIp": "10.0.0.10",
+      "destinationPort": 443,
+      "action": "ALLOW",
+      "timestamp": "2026-11-23T09:05:00Z"
+    },
+    {
+      "type": "FIREWALL",
+      "sourceIp": "192.0.2.23",
+      "destinationIp": "10.0.0.11",
+      "destinationPort": 22,
+      "action": "ALLOW",
+      "timestamp": "2026-11-23T09:06:00Z"
+    },
+    {
+      "type": "FIREWALL",
+      "sourceIp": "192.0.2.21",
+      "destinationIp": "10.0.0.12",
+      "destinationPort": 443,
+      "action": "ALLOW",
+      "timestamp": "2026-11-23T09:07:00Z"
+    }
+  ]
+}
