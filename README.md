@@ -6,7 +6,7 @@ Security event pipeline in Java 17, Spring Boot and Kafka. Design: [`docs/DESIGN
 
 - Docker Desktop (running)
 - JDK 17 and the Maven wrapper (`./mvnw`, included)
-- `openssl` and `curl` (preinstalled on macOS and most Linux)
+- `openssl`, `curl`, and Python 3 (preinstalled on macOS and most Linux)
 
 ## 1. Start everything: `scripts/start.sh`
 
@@ -52,7 +52,18 @@ What it does:
 | Wrong role | `--role analyst` | `POST /api/v1/events` | 403 |
 | Right role | `--role ingest` | `POST /api/v1/events` | 200 |
 
-## 3. The same checks by hand
+## 3. Check ingest end to end: `scripts/check_ingest.sh`
+
+```bash
+scripts/check_ingest.sh
+```
+
+With the app and Kafka running, this posts `normal.json` and `malformed.json`, checks their
+accepted/quarantined counts, verifies that a request containing a top-level `customerId` gets
+HTTP 400, and checks that all event messages produced by the run are keyed and labeled `acme`.
+It snapshots topic offsets first, so pre-existing Kafka messages are not included.
+
+## 4. The same checks by hand
 
 Get a token from the mock identity provider:
 

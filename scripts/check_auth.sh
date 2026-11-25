@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Checks sentinel's security rules against the running app (steps 8f and 9b).
+# Checks sentinel's security rules against the running app (steps 8f and 9b):
+# token validity (401), roles (403), and that a valid ingest token can post events (200).
 # For each case it mints a token with TestTokenIssuer, calls the app with curl,
 # and compares the HTTP status with the expected one.
 # Usage (from anywhere, app must be running):  scripts/check_auth.sh
@@ -58,9 +59,8 @@ check "wrong issuer"                     401 GET  "$HEALTH" "$(tok --iss http://
 check "wrong audience"                   401 GET  "$HEALTH" "$(tok --aud other-api)"
 check "signed with wrong key"            401 GET  "$HEALTH" "$(tok --private-key keys/other-private.pem)"
 check "analyst token on POST /events"    403 POST "$EVENTS" "$(tok --customer acme --role analyst)"
-check "ingest token on POST /events"     404 POST "$EVENTS" "$(tok --customer acme --role ingest)"
+check "ingest token on POST /events"     200 POST "$EVENTS" "$(tok --customer acme --role ingest)"
 
 echo
 echo "$pass passed, $fail failed"
-echo "(The last check expects 404 until the ingest controller exists; then change it to the real status.)"
 [ "$fail" -eq 0 ]

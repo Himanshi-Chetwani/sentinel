@@ -6,10 +6,13 @@ import org.junit.jupiter.api.Test;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.time.Instant;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class EventValidatorTest {
 
@@ -57,5 +60,47 @@ class EventValidatorTest {
                 """);
 
         assertThrows(EventValidationException.class, () -> validator.validate(event));
+    }
+
+    @Test
+    void rejectsMalformedIpAddresses() throws Exception {
+        for (String ip : List.of("hello", "example.com", "-1.2.3.4", "+1.2.3.4", "١.2.3.4")) {
+            var event = objectMapper.readTree("""
+                    {"type":"LOGIN","user":"alice","sourceIp":"%s",
+                     "success":true,"timestamp":"2026-11-23T09:00:00Z"}
+                    """.formatted(ip));
+
+            assertThrows(EventValidationException.class, () -> validator.validate(event), ip);
+        }
+    }
+
+    @Test
+    void acceptsIpv6Addresses() throws Exception {
+        var event = objectMapper.readTree("""
+                {"type":"LOGIN","user":"alice","sourceIp":"2001:db8::1",
+                 "success":true,"timestamp":"2026-11-23T09:00:00Z"}
+                """);
+
+        var result = assertInstanceOf(LoginEvent.class, validator.validate(event));
+        assertEquals("2001:db8::1", result.sourceIp());
+    }
+
+    @Test
+    void rejectsOversizedFieldsWithoutEchoingUnsupportedType() throws Exception {
+        var oversizedType = objectMapper.readTree("""
+                {"type":"UNKNOWN_UNKNOWN_123","timestamp":"2026-11-23T09:00:00Z"}
+                """);
+        var unsupportedType = objectMapper.readTree("""
+                {"type":"SECRET_TYPE","timestamp":"2026-11-23T09:00:00Z"}
+                """);
+
+        var oversizedException = assertThrows(
+                EventValidationException.class, () -> validator.validate(oversizedType));
+        var unsupportedException = assertThrows(
+                EventValidationException.class, () -> validator.validate(unsupportedType));
+
+        assertTrue(oversizedException.getMessage().contains("maximum length"));
+        assertEquals("Unsupported event type", unsupportedException.getMessage());
+        assertFalse(unsupportedException.getMessage().contains("SECRET_TYPE"));
     }
 }
