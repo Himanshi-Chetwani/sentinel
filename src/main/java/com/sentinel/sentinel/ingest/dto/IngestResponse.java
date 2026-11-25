@@ -1,4 +1,4 @@
-package com.sentinel.sentinel.ingest;
+package com.sentinel.sentinel.ingest.dto;
 
 import java.util.List;
 

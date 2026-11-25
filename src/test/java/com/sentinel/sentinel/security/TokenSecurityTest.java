@@ -2,6 +2,7 @@ package com.sentinel.sentinel.security;
 
 import com.sentinel.sentinel.config.JwtProperties;
 import com.sentinel.sentinel.config.SecurityConfig;
+import com.sentinel.sentinel.ingest.service.IngestService;
 import com.sentinel.sentinel.support.TestTokenIssuer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -12,6 +13,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.nio.file.Path;
 import java.security.KeyPairGenerator;
@@ -32,6 +34,9 @@ class TokenSecurityTest {
 
     @Autowired
     private MockMvc mvc;
+
+    @MockitoBean
+    private IngestService ingestService;
 
     private static TestTokenIssuer trustedIssuer;
     private static TestTokenIssuer untrustedIssuer;
@@ -57,7 +62,10 @@ class TokenSecurityTest {
     private ResultActions postEvents(String token) throws Exception {
         var request = post("/api/v1/events")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"events\":[]}");
+                .content("""
+                        {"events":[{"type":"LOGIN","user":"alice","sourceIp":"192.0.2.21",
+                        "success":true,"timestamp":"2026-11-23T09:00:00Z"}]}
+                        """);
         if (token != null) {
             request.header("Authorization", "Bearer " + token);
         }

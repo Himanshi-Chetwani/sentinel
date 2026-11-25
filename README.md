@@ -50,7 +50,7 @@ What it does:
 | Wrong audience | `--aud other-api` | `GET /actuator/health` | 401 |
 | Wrong signing key | `--private-key keys/other-private.pem` | `GET /actuator/health` | 401 |
 | Wrong role | `--role analyst` | `POST /api/v1/events` | 403 |
-| Right role | `--role ingest` | `POST /api/v1/events` | 404 until the ingest endpoint exists |
+| Right role | `--role ingest` | `POST /api/v1/events` | 200 |
 
 ## 3. The same checks by hand
 
@@ -85,6 +85,10 @@ curl -i -X POST \
 For a `401`, the `WWW-Authenticate` response header says why (for example `Jwt expired`).
 In Postman: Authorization tab, type **Bearer Token**, paste the token.
 
+The ingest endpoint accepts batches of `LOGIN` and `FIREWALL` events. Valid events are published
+to the `events` Kafka topic; invalid events are published to `events-quarantine` and returned as
+indexed rejections in the response.
+
 ## HTTP status codes
 
 | Code | Meaning | When sentinel returns it |
@@ -92,6 +96,7 @@ In Postman: Authorization tab, type **Bearer Token**, paste the token.
 | 200 OK | Request succeeded | Valid token, allowed role, endpoint exists |
 | 401 Unauthorized | Identity not proven | No token, or token expired, tampered, signed with the wrong key, or with the wrong issuer or audience |
 | 403 Forbidden | Identity proven, action not allowed | Valid token with the wrong role (e.g. `analyst` posting events) |
-| 404 Not Found | Nothing at this address | Endpoint not built yet; later also another customer's alert, so IDs cannot be probed |
+| 400 Bad Request | Invalid request body | Malformed JSON or an empty event batch |
+| 404 Not Found | Nothing at this address | Another customer's alert, so IDs cannot be probed |
 
-Checks run in this order: token (401) → role (403) → endpoint exists (404) → success (200).
+Checks run in this order: token (401) → role (403) → request validation (400) → success (200).
