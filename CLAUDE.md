@@ -2,7 +2,43 @@
 
 Nov 24, 2026 · @HC
 
-**Now:** Phase 4 code done (71b71d8): consumer flags bad IPs and saves events. Pending: end-to-end DB check, 2 tests, NOTES.md items. Then Phase 5: detection rules. Loose ends: CLAUDE.md still a PDF in the repo, 2 README fixes, check\_ingest timeout. Done: `CurrentCustomer` helper. Security checks pass (scripts/check\_auth.sh, 9/9). Viewing copy of the plan in `CLAUDE.md`; the repo file stays the source of truth.
+**Now:** Phase 4 code done (71b71d8): consumer flags bad IPs and saves events. Pending: end-to-end DB check, 2 tests, NOTES.md items. Then Phase 5: detection rules. Loose ends: 2 README fixes, check\_ingest timeout. Done: `CurrentCustomer` helper. Security checks pass (scripts/check\_auth.sh, 9/9). Full copy of `CLAUDE.md`; the repo file stays the source of truth.
+
+## Your role: tutor and reviewer, NOT the author
+
+I am building this project myself to learn, and I must be able to explain and change every line in a live walkthrough. Act as a senior engineer pairing with me.
+
+**Rules**
+
+1. Do NOT write or edit files in `src/` unless I explicitly say "write this for me" for a specific piece. Default to explaining.
+2. When I ask "how do I…": explain the concept, point to the relevant Spring/Kafka class or doc, and give a hint or pseudocode first. Show a short snippet (≤10 lines) only if I'm still stuck after the hint.
+3. When I say "review": read my changes (`git diff`), then list bugs, security issues, missing validation and missing tests, most important first. Explain why, and let me fix them.
+4. You MAY run commands to help me check my work: `mvn test`, `docker compose up`, `git status/diff/log`, curl calls. Tell me what you ran and what it showed.
+5. Boilerplate I name explicitly (e.g. `docker-compose.yml`, `.gitignore`, `pom.xml` dependencies) you may generate, then walk me through it line by line.
+6. Ask me questions to check my understanding before moving to the next step.
+7. Never put secrets, keys or tokens in the repo. Warn me if I do.
+8. Remind me to commit with a clear message after each step.
+
+## The assignment (summary)
+
+Build `sentinel` in Java + Spring Boot + Kafka:
+
+- **Ingest:** `POST /api/v1/events`, a batch of login events (user, srcIp, success, time) and firewall events (srcIp, dstIp, dstPort, action, time) → Kafka topic. Malformed events → quarantine topic; must not break the pipeline.
+- **Enrich:** mark events whose source IP is in a known-bad IP file (JSON/CSV).
+- **Detect** (configurable thresholds): brute force = ≥10 failed logins for one account from one IP within 5 min, then a success; port scan = one source IP hits ≥50 distinct ports on one host within 2 min.
+- **Alert:** severity, rule name, triggering events. Repeated matches for the same account/IP update one alert (no duplicates).
+- **Review:** `GET /api/v1/alerts`, `GET /api/v1/alerts/{id}`, `PATCH /api/v1/alerts/{id}` (status OPEN / ACKNOWLEDGED / FALSE\_POSITIVE / RESOLVED + note). Every status change goes in an audit log.
+- **Sample data:** script sending normal traffic + attack scenarios.
+
+**Security:** JWT on every endpoint (validate signature, issuer, audience, expiry; mock IdP / test tokens OK). Roles `ingest` and `analyst` enforced server-side. Customer ID comes ONLY from the token; no cross-customer access even by guessing IDs. Validate + size-limit input, parameterized queries, never log secrets/tokens. No secrets in repo, container runs as non-root, run a dependency vulnerability scan.
+
+**Deliverables:** readable git history; `docker compose up` starts everything (service, Kafka, DB, sample-data script); unit tests for both rules incl. a normal-traffic no-alert case, a customer-isolation test, a bad/expired-token test; README.md (run, test, example API calls); NOTES.md (\~1 page: design, security risks, what was left out, next steps).
+
+## Design reference
+
+`docs/DESIGN.pdf` is the source of truth for architecture, workflows (A token · B ingest · C detect+alert · D review), API, event types, data model and test scenarios. Keep code and this plan consistent with it; update the design doc when a decision changes.
+
+## Step-by-step plan (tick as done)
 
 ## Phase 0 — Setup ✅
 
@@ -59,11 +95,16 @@ Nov 24, 2026 · @HC
 - [x] 14\. `POST /api/v1/events`: validate each event; valid → `events`, malformed → `events-quarantine`; return counts
 - [x] 15\. Leak check: batch with customerId globex sent with an acme token → 400 or stored as acme. Test with Postman/curl using `sample-data/*.json`
 
-## Phase 4 — Consume + enrich (Workflow C)
+## Phase 4 — Consume + enrich (Workflow C) — in progress: code done, 18d/18e/NOTES open
 
-- [x] 16\. Consumer on `events`; unparseable → quarantine
-- [x] 17\. `bad-ips.json`; mark matching events `knownBad`
-- [ ] 18\. Persist events with customer\_id: entity, repository and consumer done (71b71d8); end-to-end DB check + 2 tests pending
+- [x] 16a. `V1__create_events.sql` (Flyway): one `events` table for both types, `username` column (not `user`, reserved), index (customer\_id, type, event\_time)
+- [x] 17\. `bad-ips.json` + `BadIpList` (loaded once at startup, immutable, null-safe, fails startup if missing) + `BadIpListTest`
+- [x] 18a. `StoredEvent` entity (private constructor; `fromLogin` / `fromFirewall`) + `EventRepository`
+- [x] 18b. `EventConsumer` (`@KafkaListener` on `events`): parse → re-validate → flag known-bad IP → save with the message's customer\_id; unreadable or invalid messages → `events-quarantine`; DB errors propagate so Kafka retries. `EventConsumerTest` (5)
+- [x] 18c. Consumer config: group `sentinel-enrich`, `auto-offset-reset: earliest`, String deserializers
+- [ ] 18d. End-to-end check: `brute_force.json` → rows with `known_bad_ip = true`; `normal.json` → false
+- [ ] 18e. Test: good IP → `knownBadIp = false`
+- [ ] NOTES.md: retries exhausted → message skipped (prod: dead-letter topic); at-least-once → duplicate rows possible; IPv6 exact-match limit
 
 ## Phase 5 — Detect (Workflow C)
 
@@ -101,4 +142,10 @@ Nov 24, 2026 · @HC
 - [ ] 35\. NOTES.md
 - [ ] 36\. Re-export DESIGN.pdf; walkthrough prep
 
-**Guardrails:** never log tokens · `private.pem` never committed or mounted · customer ID only from the token, every query filtered by it · another customer's data → 404, never 403.
+## Guardrails (always)
+
+- Never log the `Authorization` header or token strings.
+- `private.pem` never committed, never mounted into the app container.
+- Customer ID only from the token; every query filtered by it (`findByIdAndCustomerId`, never `findById`).
+- Another customer's resource → 404, never 403. Alert IDs are UUIDs.
+- No request class has a customer ID field; unknown fields are rejected.
