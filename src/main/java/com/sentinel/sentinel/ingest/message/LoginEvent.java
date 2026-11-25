@@ -1,7 +1,7 @@
-package com.sentinel.sentinel.ingest.model;
+package com.sentinel.sentinel.ingest.message;
 
 import java.time.Instant;
-
+// LoginEvent is a record that represents a login event payload.
 public record LoginEvent(
         String type,
         String user,

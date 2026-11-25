@@ -1,7 +1,7 @@
 package com.sentinel.sentinel.ingest.service;
 
-import com.sentinel.sentinel.ingest.model.FirewallEvent;
-import com.sentinel.sentinel.ingest.model.LoginEvent;
+import com.sentinel.sentinel.ingest.message.FirewallEvent;
+import com.sentinel.sentinel.ingest.message.LoginEvent;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.json.JsonMapper;
 

@@ -22,10 +22,14 @@ public class IngestController {
         this.ingestService = ingestService;
     }
 
+    // Controller gets the request from the client, in our case the script that runs on the customer's machine.
+    // It validates the request body and passes it to the service layer.
+    // Here it only validates the request body i.e 1000 event size and no extra fields, but the service layer will validate each event in the batch.
+    // It gets the current customer from the JWT token, which is validated by Spring Security before this method is called.
     @PostMapping
     public IngestResponse ingest(
             @Valid @RequestBody EventBatch batch,
             @AuthenticationPrincipal Jwt jwt) {
-        return ingestService.ingest(CurrentCustomer.from(jwt), batch);
+            return ingestService.ingest(CurrentCustomer.from(jwt), batch);
     }
 }
