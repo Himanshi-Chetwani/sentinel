@@ -65,27 +65,18 @@ public class EventConsumer {
             return;
         }
 
-        boolean knownBad = badIpList.contains(sourceIp(payload));
         StoredEvent storedEvent;
         if (payload instanceof LoginEvent loginEvent) {
+            boolean knownBad = badIpList.contains(loginEvent.sourceIp());
             storedEvent = StoredEvent.fromLogin(customerId, loginEvent, knownBad);
         } else if (payload instanceof FirewallEvent firewallEvent) {
+            boolean knownBad = badIpList.contains(firewallEvent.sourceIp());
             storedEvent = StoredEvent.fromFirewall(customerId, firewallEvent, knownBad);
         } else {
             throw new IllegalStateException("Unsupported event payload type: " + payload.getClass().getName());
         }
 
         eventRepository.save(storedEvent);
-    }
-
-    private String sourceIp(EventPayload payload) {
-        if (payload instanceof LoginEvent loginEvent) {
-            return loginEvent.sourceIp();
-        }
-        if (payload instanceof FirewallEvent firewallEvent) {
-            return firewallEvent.sourceIp();
-        }
-        throw new IllegalStateException("Unsupported event payload type: " + payload.getClass().getName());
     }
 
     private void quarantine(String rawMessage, String reason, String customerId) {
